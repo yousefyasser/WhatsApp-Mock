@@ -41,7 +41,7 @@ export const dispatchWebhook = async (message: any, contact: any) => {
   try {
     const res = await axios.post(settings.webhookUrl, payload, {
       headers: { 'Content-Type': 'application/json' },
-      timeout: 5000
+      timeout: 60000
     });
     success = res.status >= 200 && res.status < 300;
     responseCode = res.status;
