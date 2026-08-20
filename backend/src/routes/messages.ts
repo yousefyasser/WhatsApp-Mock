@@ -1,0 +1,57 @@
+import { Router } from 'express';
+import prisma from '../db/client';
+import { dispatchWebhook } from '../services/webhookDispatcher';
+import { getSettings } from '../services/settingService';
+import { getSocket } from '../ws/socketHandler';
+
+const router = Router();
+
+router.get('/:chatId/messages', async (req, res) => {
+  try {
+    const messages = await prisma.message.findMany({
+      where: { chatId: req.params.chatId },
+      orderBy: { timestamp: 'asc' }
+    });
+    res.json(messages);
+  } catch (err) {
+    console.error(err); res.status(500).json({ error: "Internal error" });
+  }
+});
+
+router.post('/:chatId/messages', async (req, res) => {
+  try {
+    const { text } = req.body;
+    const chat = await prisma.chat.findUnique({ where: { id: req.params.chatId }, include: { contact: true } });
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+
+    const settings = await getSettings();
+    const wamid = `wamid.HBgL${Math.random().toString(36).substring(2, 15)}`;
+    
+    const message = await prisma.message.create({
+      data: {
+        chatId: chat.id,
+        wamid,
+        direction: 'OUTBOUND',
+        senderPhone: settings.phoneNumber,
+        recipientPhone: chat.contact.phoneNumber,
+        textBody: text,
+        status: 'SENT'
+      }
+    });
+
+    await prisma.chat.update({
+      where: { id: chat.id },
+      data: { lastMessageAt: new Date() }
+    });
+
+    const success = await dispatchWebhook(message, chat.contact);
+    
+    getSocket().emit('message:received', message);
+    
+    res.json({ message, webhookDelivery: { success } });
+  } catch (err) {
+    console.error(err); res.status(500).json({ error: "Internal error" });
+  }
+});
+
+export default router;

@@ -1,0 +1,32 @@
+import { Router } from 'express';
+import { handleIncomingApiMessage, markMessageRead } from '../services/chatService';
+
+const router = Router();
+
+router.post('/:phone_number_id/messages', async (req, res) => {
+  try {
+    const { phone_number_id } = req.params;
+    const body = req.body;
+
+    if (body.type === 'text' && body.text?.body) {
+      const msg = await handleIncomingApiMessage(body.to, body.text.body);
+      return res.json({
+        messaging_product: "whatsapp",
+        contacts: [{ input: body.to, wa_id: body.to }],
+        messages: [{ id: msg.wamid }]
+      });
+    }
+
+    if (body.status === 'read' && body.message_id) {
+      await markMessageRead(body.message_id);
+      return res.json({ success: true });
+    }
+
+    return res.status(400).json({ error: { message: "Unsupported message type" } });
+  } catch (err) {
+    console.error(err);
+    console.error(err); res.status(500).json({ error: { message: "Internal server error" } });
+  }
+});
+
+export default router;
