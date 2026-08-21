@@ -69,6 +69,19 @@ function App() {
     }
   };
 
+  const handleSendAudio = async (audioBlob: Blob) => {
+    if (!activeChatId) return;
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.webm');
+      await api.post(`/chats/${activeChatId}/messages/audio`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDeleteChat = async (id: string) => {
     try {
       await api.delete(`/chats/${id}`);
@@ -107,7 +120,8 @@ function App() {
         <ChatWindow 
           chat={activeChat} 
           messages={messages} 
-          onSendMessage={handleSendMessage} 
+          onSendMessage={handleSendMessage}
+          onSendAudio={handleSendAudio}
           onUpdateChat={(updatedChat) => {
             setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, webhookUrl: updatedChat.webhookUrl, accessToken: updatedChat.accessToken } : c));
           }}

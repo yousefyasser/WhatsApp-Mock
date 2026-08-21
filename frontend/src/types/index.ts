@@ -35,7 +35,9 @@ export interface Message {
   direction: 'INBOUND' | 'OUTBOUND';
   senderPhone: string;
   recipientPhone: string;
-  textBody: string;
+  textBody?: string;
+  type: string;
+  mediaUrl?: string;
   status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
   errorMessage: string | null;
   timestamp: string;

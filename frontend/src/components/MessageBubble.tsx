@@ -6,7 +6,7 @@ import { Check, CheckCheck } from 'lucide-react';
 export const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
   const isOutbound = message.direction === 'OUTBOUND';
   const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const htmlContent = parseWhatsAppMarkdown(message.textBody);
+  const htmlContent = message.textBody ? parseWhatsAppMarkdown(message.textBody) : '';
 
   const getStatusIcon = () => {
     if (!isOutbound) return null;
@@ -18,10 +18,16 @@ export const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
     }
   };
 
+  const API_BASE = 'http://localhost:3000'; // Default API URL for media relative links
+
   return (
     <div className={`flex w-full ${isOutbound ? 'justify-end' : 'justify-start'} mb-2`}>
       <div className={`max-w-[70%] rounded-lg px-3 py-2 relative shadow ${isOutbound ? 'bg-[#d9fdd3]' : 'bg-white'}`}>
-        <p className="text-sm text-gray-800 break-words whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        {message.type === 'audio' && message.mediaUrl ? (
+          <audio src={`${API_BASE}${message.mediaUrl}`} controls className="h-10 mt-1 max-w-full" />
+        ) : (
+          <p className="text-sm text-gray-800 break-words whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+        )}
         <div className="text-[10px] text-gray-500 text-right mt-1 flex justify-end items-center gap-1">
           {time}
           {getStatusIcon()}

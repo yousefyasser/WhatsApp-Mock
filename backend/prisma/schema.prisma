@@ -50,7 +50,9 @@ model Message {
   direction      String   // "INBOUND" or "OUTBOUND"
   senderPhone    String
   recipientPhone String
-  textBody       String
+  textBody       String?
+  type           String   @default("text")
+  mediaUrl       String?
   status         String   @default("SENT") // "SENT", "DELIVERED", "READ", "FAILED"
   errorMessage   String?
   timestamp      DateTime @default(now())

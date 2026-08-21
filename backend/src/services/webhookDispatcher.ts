@@ -28,8 +28,10 @@ export const dispatchWebhook = async (message: any, contact: any) => {
             from: contact.phoneNumber,
             id: message.wamid,
             timestamp: Math.floor(message.timestamp.getTime() / 1000).toString(),
-            type: "text",
-            text: { body: message.textBody }
+            type: message.type || "text",
+            ...(message.type === 'audio' 
+              ? { audio: { link: `http://localhost:${process.env.PORT || 3000}${message.mediaUrl}` } }
+              : { text: { body: message.textBody } })
           }]
         }
       }]
