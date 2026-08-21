@@ -42,9 +42,9 @@ function App() {
     }
   }, [activeChatId]);
 
-  const handleNewChat = async (phoneNumber: string) => {
+  const handleNewChat = async (phoneNumber: string, webhookUrl: string, accessToken: string) => {
     try {
-      const res = await api.post('/chats', { phoneNumber, name: phoneNumber });
+      const res = await api.post('/chats', { phoneNumber, name: phoneNumber, webhookUrl, accessToken });
       fetchChats();
       setActiveChatId(res.data.id);
     } catch (err) {
@@ -89,6 +89,9 @@ function App() {
           chat={activeChat} 
           messages={messages} 
           onSendMessage={handleSendMessage} 
+          onUpdateChat={(updatedChat) => {
+            setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, webhookUrl: updatedChat.webhookUrl, accessToken: updatedChat.accessToken } : c));
+          }}
         />
       </main>
 

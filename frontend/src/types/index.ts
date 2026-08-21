@@ -4,8 +4,6 @@ export interface Setting {
   displayName: string;
   phoneNumberId: string;
   wabaId: string;
-  accessToken: string;
-  webhookUrl: string;
   webhookVerifyToken: string;
   updatedAt: string;
 }
@@ -23,6 +21,8 @@ export interface Chat {
   id: string;
   contactId: string;
   contact?: Contact;
+  webhookUrl: string;
+  accessToken: string;
   lastMessageAt: string;
   unreadCount: number;
   messages?: Message[];

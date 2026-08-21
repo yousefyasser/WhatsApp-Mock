@@ -6,13 +6,15 @@ interface Props {
   chats: Chat[];
   activeChatId: string | null;
   onSelectChat: (chatId: string) => void;
-  onNewChat: (phoneNumber: string) => void;
+  onNewChat: (phoneNumber: string, webhookUrl: string, accessToken: string) => void;
 }
 
 export const Sidebar: React.FC<Props> = ({ chats, activeChatId, onSelectChat, onNewChat }) => {
   const [search, setSearch] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const [newPhone, setNewPhone] = useState('');
+  const [newWebhookUrl, setNewWebhookUrl] = useState('http://localhost:8000/api/whatsapp/webhook');
+  const [newAccessToken, setNewAccessToken] = useState('mock_access_token_secret');
 
   const filtered = chats.filter(c => 
     c.contact?.phoneNumber.includes(search) || 
@@ -20,8 +22,8 @@ export const Sidebar: React.FC<Props> = ({ chats, activeChatId, onSelectChat, on
   );
 
   const handleCreate = () => {
-    if (newPhone) {
-      onNewChat(newPhone);
+    if (newPhone && newWebhookUrl && newAccessToken) {
+      onNewChat(newPhone, newWebhookUrl, newAccessToken);
       setNewPhone('');
       setShowNewChat(false);
     }
@@ -44,6 +46,20 @@ export const Sidebar: React.FC<Props> = ({ chats, activeChatId, onSelectChat, on
             className="w-full p-2 border rounded text-sm mb-2"
             value={newPhone}
             onChange={e => setNewPhone(e.target.value)}
+          />
+          <input 
+            type="text" 
+            placeholder="Webhook URL" 
+            className="w-full p-2 border rounded text-sm mb-2"
+            value={newWebhookUrl}
+            onChange={e => setNewWebhookUrl(e.target.value)}
+          />
+          <input 
+            type="text" 
+            placeholder="Access Token" 
+            className="w-full p-2 border rounded text-sm mb-2"
+            value={newAccessToken}
+            onChange={e => setNewAccessToken(e.target.value)}
           />
           <div className="flex gap-2">
             <button onClick={handleCreate} className="flex-1 bg-green-500 text-white rounded py-1 text-sm">Create</button>

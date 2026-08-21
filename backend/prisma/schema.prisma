@@ -13,8 +13,6 @@ model Setting {
   displayName        String   @default("WhatsApp Business Mock")
   phoneNumberId      String   @default("100000000000001")
   wabaId             String   @default("200000000000002")
-  accessToken        String   @default("mock_access_token_secret")
-  webhookUrl         String   @default("http://localhost:8000/api/whatsapp/webhook")
   webhookVerifyToken String   @default("mock_verify_token")
   updatedAt          DateTime @updatedAt
 }
@@ -33,12 +31,16 @@ model Chat {
   id            String    @id @default(uuid())
   contactId     String    @unique
   contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  webhookUrl    String    @default("http://localhost:8000/api/whatsapp/webhook")
+  accessToken   String    @default("mock_access_token_secret")
   lastMessageAt DateTime  @default(now())
   unreadCount   Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   messages      Message[]
 }
+
+
 
 model Message {
   id             String   @id @default(uuid())

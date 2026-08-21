@@ -52,14 +52,6 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
             <label className="block text-sm font-medium mb-1">WABA ID</label>
             <input name="wabaId" value={settings.wabaId} onChange={handleChange} className="w-full border rounded p-2" />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Access Token</label>
-            <input name="accessToken" value={settings.accessToken} onChange={handleChange} className="w-full border rounded p-2" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Webhook URL</label>
-            <input name="webhookUrl" value={settings.webhookUrl} onChange={handleChange} className="w-full border rounded p-2" />
-          </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 border rounded hover:bg-gray-100">Cancel</button>

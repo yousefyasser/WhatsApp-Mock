@@ -14,7 +14,8 @@ router.get('/', async (req, res) => {
 
 router.put('/', async (req, res) => {
   try {
-    const settings = await updateSettings(req.body);
+    const { webhookUrl, accessToken, ...updateData } = req.body;
+    const settings = await updateSettings(updateData);
     res.json(settings);
   } catch (err) {
     console.error(err); res.status(500).json({ error: 'Failed to update settings' });

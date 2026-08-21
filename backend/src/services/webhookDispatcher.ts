@@ -4,7 +4,9 @@ import { getSettings } from './settingService';
 
 export const dispatchWebhook = async (message: any, contact: any) => {
   const settings = await getSettings();
-  if (!settings.webhookUrl) return;
+  const chat = await prisma.chat.findUnique({ where: { id: message.chatId } });
+  
+  if (!chat || !chat.webhookUrl) return;
 
   const payload = {
     object: "whatsapp_business_account",
@@ -39,7 +41,7 @@ export const dispatchWebhook = async (message: any, contact: any) => {
   let responseBody = null;
 
   try {
-    const res = await axios.post(settings.webhookUrl, payload, {
+    const res = await axios.post(chat.webhookUrl, payload, {
       headers: { 'Content-Type': 'application/json' },
       timeout: 60000
     });
@@ -54,7 +56,7 @@ export const dispatchWebhook = async (message: any, contact: any) => {
   await prisma.webhookLog.create({
     data: {
       messageId: message.id,
-      targetUrl: settings.webhookUrl,
+      targetUrl: chat.webhookUrl,
       payload: JSON.stringify(payload),
       responseCode,
       responseBody,
