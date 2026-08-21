@@ -29,8 +29,15 @@ function App() {
       }
     });
 
+    socket.on('message:status', (updatedMsg: Message) => {
+      if (activeChatId === updatedMsg.chatId) {
+        setMessages(prev => prev.map(m => m.id === updatedMsg.id ? { ...m, status: updatedMsg.status } : m));
+      }
+    });
+
     return () => {
       socket.off('message:received');
+      socket.off('message:status');
     };
   }, [activeChatId]);
 
