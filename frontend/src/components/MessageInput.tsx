@@ -39,9 +39,14 @@ export const MessageInput: React.FC<Props> = ({ onSend, onSendAudio }) => {
     return (
       <div className="bg-[#f0f2f5] p-3 flex items-center gap-2">
         <AudioRecorder 
-          onRecordingComplete={(blob) => {
-            setAudioBlob(blob);
-            setIsRecording(false);
+          onRecordingComplete={(blob, sendImmediately) => {
+            if (sendImmediately && onSendAudio) {
+              setIsRecording(false);
+              onSendAudio(blob);
+            } else {
+              setAudioBlob(blob);
+              setIsRecording(false);
+            }
           }}
           onCancel={() => setIsRecording(false)}
         />

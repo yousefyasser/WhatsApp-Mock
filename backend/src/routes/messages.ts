@@ -63,7 +63,7 @@ router.post('/:chatId/messages/audio', uploadAudio.single('audio'), async (req, 
   try {
     if (!req.file) return res.status(400).json({ error: "No audio file provided" });
 
-    const chat = await prisma.chat.findUnique({ where: { id: req.params.chatId }, include: { contact: true } });
+    const chat = await prisma.chat.findUnique({ where: { id: req.params.chatId as string }, include: { contact: true } });
     if (!chat) return res.status(404).json({ error: "Chat not found" });
 
     const settings = await getSettings();

@@ -30,7 +30,7 @@ export const dispatchWebhook = async (message: any, contact: any) => {
             timestamp: Math.floor(message.timestamp.getTime() / 1000).toString(),
             type: message.type || "text",
             ...(message.type === 'audio' 
-              ? { audio: { link: `http://localhost:${process.env.PORT || 3000}${message.mediaUrl}` } }
+              ? { audio: { id: message.id, mime_type: 'audio/webm' } }
               : { text: { body: message.textBody } })
           }]
         }
