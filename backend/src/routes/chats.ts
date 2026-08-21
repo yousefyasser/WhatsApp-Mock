@@ -64,4 +64,14 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.chat.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err); res.status(500).json({ error: "Internal error" });
+  }
+});
+
 export default router;

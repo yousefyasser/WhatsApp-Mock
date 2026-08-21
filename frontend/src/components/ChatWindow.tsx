@@ -3,7 +3,7 @@ import { Chat, Message } from '../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatSettingsModal } from './ChatSettingsModal';
-import { Settings } from 'lucide-react';
+import { Settings, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 interface Props {
@@ -11,9 +11,10 @@ interface Props {
   messages: Message[];
   onSendMessage: (text: string) => void;
   onUpdateChat: (chat: Chat) => void;
+  onDeleteChat: (chatId: string) => void;
 }
 
-export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onUpdateChat }) => {
+export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onUpdateChat, onDeleteChat }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -22,6 +23,12 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onU
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleDelete = () => {
+    if (chat && window.confirm('Are you sure you want to delete this chat?')) {
+      onDeleteChat(chat.id);
+    }
+  };
 
   if (!chat) return <div className="flex-1 flex items-center justify-center bg-[#efeae2] text-gray-500">Select a chat</div>;
 
@@ -34,13 +41,22 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onU
           </div>
           <h2 className="font-semibold text-gray-800">{chat.contact?.name || chat.contact?.phoneNumber}</h2>
         </div>
-        <button 
-          onClick={() => setIsSettingsOpen(true)} 
-          className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-200"
-          title="Chat Settings"
-        >
-          <Settings size={20} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={handleDelete} 
+            className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-gray-200"
+            title="Delete Chat"
+          >
+            <Trash2 size={20} />
+          </button>
+          <button 
+            onClick={() => setIsSettingsOpen(true)} 
+            className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-200"
+            title="Chat Settings"
+          >
+            <Settings size={20} />
+          </button>
+        </div>
       </div>
       
       <ChatSettingsModal 

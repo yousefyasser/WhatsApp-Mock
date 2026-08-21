@@ -62,6 +62,18 @@ function App() {
     }
   };
 
+  const handleDeleteChat = async (id: string) => {
+    try {
+      await api.delete(`/chats/${id}`);
+      setChats(prev => prev.filter(c => c.id !== id));
+      if (activeChatId === id) {
+        setActiveChatId(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const activeChat = chats.find(c => c.id === activeChatId) || null;
 
   return (
@@ -92,6 +104,7 @@ function App() {
           onUpdateChat={(updatedChat) => {
             setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, webhookUrl: updatedChat.webhookUrl, accessToken: updatedChat.accessToken } : c));
           }}
+          onDeleteChat={handleDeleteChat}
         />
       </main>
 
