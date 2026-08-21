@@ -44,11 +44,14 @@ router.post('/:chatId/messages', async (req, res) => {
       data: { lastMessageAt: new Date() }
     });
 
-    const success = await dispatchWebhook(message, chat.contact);
-    
     getSocket().emit('message:received', message);
     
-    res.json({ message, webhookDelivery: { success } });
+    // Fire and forget webhook
+    dispatchWebhook(message, chat.contact).catch(err => {
+      console.error('Webhook dispatch failed:', err);
+    });
+    
+    res.json({ message, webhookDelivery: { pending: true } });
   } catch (err) {
     console.error(err); res.status(500).json({ error: "Internal error" });
   }
