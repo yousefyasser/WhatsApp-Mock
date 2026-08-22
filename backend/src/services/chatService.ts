@@ -21,8 +21,8 @@ export const handleIncomingApiMessage = async (toPhone: string, textBody: string
       chatId: chat.id,
       wamid,
       direction: 'INBOUND',
-      senderPhone: '1000000000', // Mock system sender
-      recipientPhone: toPhone,
+      senderPhone: contact.phoneNumber,
+      recipientPhone: chat.phoneNumber,
       textBody,
       status: 'DELIVERED'
     },

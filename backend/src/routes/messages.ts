@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import prisma from '../db/client';
 import { dispatchWebhook } from '../services/webhookDispatcher';
-import { getSettings } from '../services/settingService';
 import { getSocket } from '../ws/socketHandler';
+import { uploadAudio } from '../middleware/upload';
 
 const router = Router();
 
@@ -24,7 +24,6 @@ router.post('/:chatId/messages', async (req, res) => {
     const chat = await prisma.chat.findUnique({ where: { id: req.params.chatId }, include: { contact: true } });
     if (!chat) return res.status(404).json({ error: "Chat not found" });
 
-    const settings = await getSettings();
     const wamid = `wamid.HBgL${Math.random().toString(36).substring(2, 15)}`;
     
     const message = await prisma.message.create({
@@ -32,7 +31,7 @@ router.post('/:chatId/messages', async (req, res) => {
         chatId: chat.id,
         wamid,
         direction: 'OUTBOUND',
-        senderPhone: settings.phoneNumber,
+        senderPhone: chat.phoneNumber,
         recipientPhone: chat.contact.phoneNumber,
         textBody: text,
         status: 'SENT'
@@ -57,8 +56,6 @@ router.post('/:chatId/messages', async (req, res) => {
   }
 });
 
-import { uploadAudio } from '../middleware/upload';
-
 router.post('/:chatId/messages/audio', uploadAudio.single('audio'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No audio file provided" });
@@ -66,7 +63,6 @@ router.post('/:chatId/messages/audio', uploadAudio.single('audio'), async (req, 
     const chat = await prisma.chat.findUnique({ where: { id: req.params.chatId as string }, include: { contact: true } });
     if (!chat) return res.status(404).json({ error: "Chat not found" });
 
-    const settings = await getSettings();
     const wamid = `wamid.HBgL${Math.random().toString(36).substring(2, 15)}`;
     const mediaUrl = `/uploads/audio/${req.file.filename}`;
     
@@ -75,7 +71,7 @@ router.post('/:chatId/messages/audio', uploadAudio.single('audio'), async (req, 
         chatId: chat.id,
         wamid,
         direction: 'OUTBOUND',
-        senderPhone: settings.phoneNumber,
+        senderPhone: chat.phoneNumber,
         recipientPhone: chat.contact.phoneNumber,
         type: 'audio',
         mediaUrl: mediaUrl,

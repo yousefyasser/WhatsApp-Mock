@@ -31,16 +31,29 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
     }
   };
 
+  const handleSaveSettings = async (updatedData: Partial<Chat> & { contactPhone?: string }) => {
+    if (!chat) return;
+    try {
+      const res = await api.put(`/chats/${chat.id}`, updatedData);
+      onUpdateChat(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (!chat) return <div className="flex-1 flex items-center justify-center bg-[#efeae2] text-gray-500">Select a chat</div>;
 
   return (
-    <div className="flex-1 flex flex-col bg-[#efeae2]">
+    <div className="flex-1 flex flex-col" style={{ backgroundColor: chat.backgroundColor || '#efeae2' }}>
       <div className="bg-[#f0f2f5] px-4 py-3 border-b flex items-center justify-between">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold mr-3">
             {chat.contact?.name?.[0]?.toUpperCase() || '#'}
           </div>
-          <h2 className="font-semibold text-gray-800">{chat.contact?.name || chat.contact?.phoneNumber}</h2>
+          <div>
+            <h2 className="font-semibold text-gray-800">{chat.contact?.name || chat.contact?.phoneNumber}</h2>
+            <div className="text-xs text-gray-500">{chat.phoneNumber} (WABA)</div>
+          </div>
         </div>
         <div className="flex gap-2">
           <button 
@@ -64,7 +77,7 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
         chat={chat} 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
-        onUpdate={onUpdateChat} 
+        onSave={handleSaveSettings} 
       />
       
       <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>

@@ -10,7 +10,8 @@ services:
     environment:
       - PORT=3000
       - DATABASE_URL=file:./dev.db
-    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build:
@@ -20,4 +21,3 @@ services:
       - "80:80"
     depends_on:
       - backend
-    restart: unless-stopped

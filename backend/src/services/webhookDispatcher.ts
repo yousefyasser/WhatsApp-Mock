@@ -1,9 +1,7 @@
 import axios from 'axios';
 import prisma from '../db/client';
-import { getSettings } from './settingService';
 
 export const dispatchWebhook = async (message: any, contact: any) => {
-  const settings = await getSettings();
   const chat = await prisma.chat.findUnique({ where: { id: message.chatId } });
   
   if (!chat || !chat.webhookUrl) return;
@@ -11,14 +9,14 @@ export const dispatchWebhook = async (message: any, contact: any) => {
   const payload = {
     object: "whatsapp_business_account",
     entry: [{
-      id: settings.wabaId,
+      id: chat.wabaId,
       changes: [{
         field: "messages",
         value: {
           messaging_product: "whatsapp",
           metadata: {
-            display_phone_number: settings.phoneNumber,
-            phone_number_id: settings.phoneNumberId
+            display_phone_number: chat.phoneNumber,
+            phone_number_id: chat.phoneNumberId
           },
           contacts: [{
             profile: { name: contact.name || contact.phoneNumber },

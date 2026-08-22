@@ -17,28 +17,52 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { phoneNumber, name, webhookUrl, accessToken } = req.body;
-    let contact = await prisma.contact.findUnique({ where: { phoneNumber } });
+    const { 
+      contactPhone, 
+      name, 
+      webhookUrl, 
+      accessToken,
+      phoneNumber,
+      displayName,
+      phoneNumberId,
+      wabaId,
+      webhookVerifyToken,
+      tags,
+      backgroundColor
+    } = req.body;
+    
+    // For backward compatibility or if frontend still sends phoneNumber as contactPhone
+    const actualContactPhone = contactPhone;
+
+    let contact = await prisma.contact.findUnique({ where: { phoneNumber: actualContactPhone } });
     if (!contact) {
-      contact = await prisma.contact.create({ data: { phoneNumber, name } });
+      contact = await prisma.contact.create({ data: { phoneNumber: actualContactPhone, name } });
     }
+    
     let chat = await prisma.chat.findUnique({ where: { contactId: contact.id } });
+    const chatData = {
+      ...(webhookUrl !== undefined && { webhookUrl }),
+      ...(accessToken !== undefined && { accessToken }),
+      ...(phoneNumber !== undefined && { phoneNumber }), // WABA phone number
+      ...(displayName !== undefined && { displayName }),
+      ...(phoneNumberId !== undefined && { phoneNumberId }),
+      ...(wabaId !== undefined && { wabaId }),
+      ...(webhookVerifyToken !== undefined && { webhookVerifyToken }),
+      ...(tags !== undefined && { tags }),
+      ...(backgroundColor !== undefined && { backgroundColor })
+    };
+
     if (!chat) {
       chat = await prisma.chat.create({ 
-        data: { contactId: contact.id, webhookUrl, accessToken }, 
+        data: { contactId: contact.id, ...chatData }, 
         include: { contact: true } 
       });
-    } else if (webhookUrl || accessToken) {
+    } else {
       chat = await prisma.chat.update({
         where: { id: chat.id },
-        data: {
-          ...(webhookUrl && { webhookUrl }),
-          ...(accessToken && { accessToken })
-        },
+        data: chatData,
         include: { contact: true }
       });
-    } else {
-      chat = await prisma.chat.findUniqueOrThrow({ where: { id: chat.id }, include: { contact: true } });
     }
     res.json(chat);
   } catch (err) {
@@ -49,16 +73,46 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { webhookUrl, accessToken } = req.body;
-    const chat = await prisma.chat.update({
+    const { 
+      webhookUrl, 
+      accessToken,
+      phoneNumber,
+      displayName,
+      phoneNumberId,
+      wabaId,
+      webhookVerifyToken,
+      tags,
+      backgroundColor,
+      contactPhone
+    } = req.body;
+
+    let chat = await prisma.chat.findUnique({ where: { id }, include: { contact: true } });
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
+
+    if (contactPhone && contactPhone !== chat.contact?.phoneNumber) {
+      // update contact phone
+      await prisma.contact.update({
+        where: { id: chat.contactId },
+        data: { phoneNumber: contactPhone, name: contactPhone }
+      });
+    }
+
+    const updatedChat = await prisma.chat.update({
       where: { id },
       data: {
-        ...(webhookUrl && { webhookUrl }),
-        ...(accessToken && { accessToken })
+        ...(webhookUrl !== undefined && { webhookUrl }),
+        ...(accessToken !== undefined && { accessToken }),
+        ...(phoneNumber !== undefined && { phoneNumber }),
+        ...(displayName !== undefined && { displayName }),
+        ...(phoneNumberId !== undefined && { phoneNumberId }),
+        ...(wabaId !== undefined && { wabaId }),
+        ...(webhookVerifyToken !== undefined && { webhookVerifyToken }),
+        ...(tags !== undefined && { tags }),
+        ...(backgroundColor !== undefined && { backgroundColor })
       },
       include: { contact: true }
     });
-    res.json(chat);
+    res.json(updatedChat);
   } catch (err) {
     console.error(err); res.status(500).json({ error: "Internal error" });
   }

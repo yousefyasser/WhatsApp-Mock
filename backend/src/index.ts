@@ -3,7 +3,6 @@ import cors from 'cors';
 import { createServer } from 'http';
 import dotenv from 'dotenv';
 import { initSocket } from './ws/socketHandler';
-import settingsRouter from './routes/settings';
 import chatRouter from './routes/chats';
 import messageRouter from './routes/messages';
 import webhookLogsRouter from './routes/webhookLogs';
@@ -20,7 +19,6 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api/settings', settingsRouter);
 app.use('/api/chats', chatRouter);
 app.use('/api/chats', messageRouter);
 app.use('/api/webhook-logs', webhookLogsRouter);

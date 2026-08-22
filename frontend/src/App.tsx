@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { SettingsModal } from './components/SettingsModal';
 import { WebhookLogsModal } from './components/WebhookLogsModal';
 import { Sidebar } from './components/Sidebar';
 import { ChatWindow } from './components/ChatWindow';
-import { Settings, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import api from './services/api';
 import socket from './services/socket';
 import { Chat, Message } from './types';
 
 function App() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -49,9 +47,9 @@ function App() {
     }
   }, [activeChatId]);
 
-  const handleNewChat = async (phoneNumber: string, webhookUrl: string, accessToken: string) => {
+  const handleNewChat = async (chatData: any) => {
     try {
-      const res = await api.post('/chats', { phoneNumber, name: phoneNumber, webhookUrl, accessToken });
+      const res = await api.post('/chats', chatData);
       fetchChats();
       setActiveChatId(res.data.id);
     } catch (err) {
@@ -104,9 +102,6 @@ function App() {
           <button onClick={() => setIsLogsOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Webhook Logs">
             <Activity size={24} />
           </button>
-          <button onClick={() => setIsSettingsOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Settings">
-            <Settings size={24} />
-          </button>
         </div>
       </header>
       
@@ -123,13 +118,12 @@ function App() {
           onSendMessage={handleSendMessage}
           onSendAudio={handleSendAudio}
           onUpdateChat={(updatedChat) => {
-            setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, webhookUrl: updatedChat.webhookUrl, accessToken: updatedChat.accessToken } : c));
+            setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, ...updatedChat } : c));
           }}
           onDeleteChat={handleDeleteChat}
         />
       </main>
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <WebhookLogsModal isOpen={isLogsOpen} onClose={() => setIsLogsOpen(false)} />
     </div>
   );
