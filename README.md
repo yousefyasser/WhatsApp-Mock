@@ -3,9 +3,6 @@
 A lightweight, self-hosted mock of the WhatsApp Cloud API — built for development and testing teams who want to simulate WhatsApp messaging **without** setting up a real Meta Business account or WhatsApp number.
 
 > **For testing and development use only.** This project is not intended for production traffic.
-
-WhatsApp Mock Service UIWhatsapp Chat settings UIWhatsapp Chat logs UI
-
 ---
 
 ## Why This Exists
@@ -21,6 +18,13 @@ WhatsApp Mock Service eliminates that friction by:
 - Mimicking the WhatsApp Cloud API endpoint contract (`/v22.0/<phone_number_id>/messages`)
 - Forwarding inbound messages to your application's webhook — just like the real WhatsApp Cloud API would
 - Providing a chat UI so you can send and receive messages manually during development
+
+![WhatsApp Mock Service UI](/docs/images/ui-screenshot.png) 
+
+![Chat settings UI](/docs/images/settings-ui.png) 
+
+![Chat logs UI](/docs/images/logs-ui.png)
+
 
 ---
 
