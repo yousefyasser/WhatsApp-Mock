@@ -2,15 +2,22 @@
 
 A lightweight, self-hosted mock of the WhatsApp Cloud API — built for development and testing teams who want to simulate WhatsApp messaging **without** setting up a real Meta Business account or WhatsApp number.
 
-> ⚠️ **For testing and development use only.** This project is not intended for production traffic.
+> **For testing and development use only.** This project is not intended for production traffic.
+
+WhatsApp Mock Service UIWhatsapp Chat settings UIWhatsapp Chat logs UI
 
 ---
 
 ## Why This Exists
 
+Inspired by [MailHog](https://github.com/mailhog/mailhog)
+
 Integrating with WhatsApp Cloud API requires a verified Meta Business Account, a dedicated phone number, and an approved application. This overhead slows down early-stage development and makes local testing cumbersome.
 
+Beyond mocking the basic send/receive flow, the service is designed to make local WhatsApp integration testing as close to the real development experience as possible. It removes the need for public webhook URLs, port forwarding, or tunneling services by allowing each chat to define its own webhook endpoint, making it easy to work with multiple backend integrations simultaneously and route each conversation to the appropriate application. Developers can simulate incoming and outgoing messages entirely within their local environment, inspect conversations through the built-in chat UI, and test webhook-driven workflows without depending on external WhatsApp infrastructure. The service also supports voice notes, allowing audio-based messaging scenarios to be tested alongside regular text messages.
+
 WhatsApp Mock Service eliminates that friction by:
+
 - Mimicking the WhatsApp Cloud API endpoint contract (`/v22.0/<phone_number_id>/messages`)
 - Forwarding inbound messages to your application's webhook — just like the real WhatsApp Cloud API would
 - Providing a chat UI so you can send and receive messages manually during development
@@ -40,13 +47,43 @@ WhatsApp Mock Service eliminates that friction by:
 git clone https://github.com/<your-org>/whatsapp-mocked.git
 cd whatsapp-mocked
 
+docker compose up
+```
+
+
+| Service | Default URL                                    |
+| ------- | ---------------------------------------------- |
+| UI      | [http://localhost:5173](http://localhost:5173) |
+| API     | [http://localhost:3000](http://localhost:3000) |
+
+
+### Changing host ports
+
+Host ports are configurable via a `.env` file in the project root. Copy the example and edit the values:
+
+```bash
+cp .env.example .env
+```
+
+```env
+BACKEND_PORT=3000
+FRONTEND_PORT=5173
+```
+
+Then restart Compose so the new mappings take effect:
+
+```bash
 docker compose up -d
 ```
 
-| Service  | URL                    |
-|----------|------------------------|
-| UI       | http://localhost:80    |
-| API      | http://localhost:3000  |
+
+| Variable        | Maps to            | Default |
+| --------------- | ------------------ | ------- |
+| `BACKEND_PORT`  | host → API `:3000` | `3000`  |
+| `FRONTEND_PORT` | host → UI `:80`    | `5173`  |
+
+
+If `.env` is missing, Compose uses the defaults above.
 
 ### Connecting to localhost from inside Docker
 
@@ -82,35 +119,43 @@ Click the **New Chat** icon in the sidebar. You will be prompted to fill in all 
 Settings are grouped into three sections, each of which is persisted independently per chat:
 
 #### Server Settings
+
 These values are used when constructing the webhook payload sent to your application.
 
-| Field            | Description                                                              |
-|------------------|--------------------------------------------------------------------------|
-| Webhook URL      | The endpoint on your server that receives inbound message events         |
-| Verify Token     | Token used during webhook verification handshake                         |
-| Phone Number ID  | Simulated WABA phone number ID, included in the webhook metadata         |
-| WABA ID          | Simulated WhatsApp Business Account ID, included in the webhook `entry`  |
-| Contact Phone    | The phone number of the contact (the party you are messaging)            |
+
+| Field           | Description                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| Webhook URL     | The endpoint on your server that receives inbound message events        |
+| Verify Token    | Token used during webhook verification handshake                        |
+| Phone Number ID | Simulated WABA phone number ID, included in the webhook metadata        |
+| WABA ID         | Simulated WhatsApp Business Account ID, included in the webhook `entry` |
+| Contact Phone   | The phone number of the contact (the party you are messaging)           |
+
 
 #### Sender Details
 
-| Field              | Description                                           |
-|--------------------|-------------------------------------------------------|
-| Sender Phone Number | Your simulated WABA phone number                    |
-| Display Name       | The display name of your WhatsApp Business account    |
+
+| Field               | Description                                        |
+| ------------------- | -------------------------------------------------- |
+| Sender Phone Number | Your simulated WABA phone number                   |
+| Display Name        | The display name of your WhatsApp Business account |
+
 
 #### Others
 
-| Field            | Description                                          |
-|------------------|------------------------------------------------------|
-| Tags             | Comma-separated labels for categorising this chat    |
-| Background Color | Customise the chat window background color           |
+
+| Field            | Description                                       |
+| ---------------- | ------------------------------------------------- |
+| Tags             | Comma-separated labels for categorising this chat |
+| Background Color | Customise the chat window background color        |
+
 
 Settings can be updated at any time via the **Chat Settings** (⚙️) button in the chat header.
 
 ### Sending Messages
 
 From the chat window:
+
 - **Text** — type in the input field and press Enter or click send
 - **Voice** — click the microphone icon, record, and click send
 
@@ -165,7 +210,8 @@ The message will appear in the chat UI as an outbound message.
 
 ### Webhook Logs
 
-Click the **Activity** (📊) icon in the top bar to open the Webhook Logs panel. Every outbound webhook dispatch is recorded with:
+Click the **Activity** icon in the top bar to open the Webhook Logs panel. Every outbound webhook dispatch is recorded with:
+
 - Target URL
 - Full payload
 - HTTP response code and body
@@ -173,91 +219,15 @@ Click the **Activity** (📊) icon in the top bar to open the Webhook Logs panel
 
 ---
 
-## Architecture
+## Technology Stack
 
-```mermaid
-flowchart TD
-    User["Developer / Tester"]
 
-    subgraph UI["Frontend (React + Vite)"]
-        Sidebar["Sidebar\n(Chat List & New Chat)"]
-        ChatWindow["Chat Window\n(Messages)"]
-        SettingsModal["Chat Settings Modal"]
-        LogsModal["Webhook Logs Modal"]
-    end
-
-    subgraph API["Backend (Node.js + Express)"]
-        ChatsRoute["/api/chats"]
-        MessagesRoute["/api/chats/:id/messages"]
-        CloudApiRoute["/v22.0/:phone_number_id/messages"]
-        LogsRoute["/api/webhook-logs"]
-        Dispatcher["Webhook Dispatcher"]
-        Socket["Socket.io"]
-    end
-
-    DB[("SQLite\n(Prisma ORM)")]
-    YourApp["Your Application\n(Webhook Consumer)"]
-
-    User -->|"Interacts with"| UI
-    UI -->|"REST"| ChatsRoute
-    UI -->|"REST"| MessagesRoute
-    UI -->|"REST"| LogsRoute
-    UI <-->|"WebSocket"| Socket
-
-    ChatsRoute --> DB
-    MessagesRoute --> DB
-    MessagesRoute --> Dispatcher
-    LogsRoute --> DB
-
-    YourApp -->|"Send message via\nWhatsApp Cloud API contract"| CloudApiRoute
-    CloudApiRoute --> DB
-    CloudApiRoute --> Socket
-
-    Dispatcher -->|"POST webhook payload"| YourApp
-    Dispatcher --> DB
-```
-
-### Technology Stack
-
-| Layer     | Technology                                                      |
-|-----------|-----------------------------------------------------------------|
-| Frontend  | React, Vite, Tailwind CSS, Socket.io client                     |
-| Backend   | Node.js, Express, TypeScript, Socket.io                         |
-| Database  | SQLite (via Prisma ORM)                                         |
-| Container | Docker, Docker Compose, Nginx (frontend static serving)         |
-
----
-
-## Project Structure
-
-```
-whatsapp-mocked/
-├── backend/
-│   ├── prisma/
-│   │   └── schema.prisma        # Data model
-│   └── src/
-│       ├── routes/
-│       │   ├── chats.ts         # Chat CRUD
-│       │   ├── messages.ts      # Message handling
-│       │   ├── webhookLogs.ts   # Log retrieval
-│       │   └── whatsappCloudApi.ts  # WhatsApp API contract mock
-│       ├── services/
-│       │   ├── chatService.ts       # Business logic
-│       │   └── webhookDispatcher.ts # Outbound webhook delivery
-│       └── ws/
-│           └── socketHandler.ts # Real-time events
-├── frontend/
-│   └── src/
-│       └── components/
-│           ├── Sidebar.tsx
-│           ├── ChatWindow.tsx
-│           ├── ChatSettingsModal.tsx
-│           ├── MessageInput.tsx
-│           ├── MessageBubble.tsx
-│           ├── AudioRecorder.tsx
-│           └── WebhookLogsModal.tsx
-└── docker-compose.yml
-```
+| Layer     | Technology                                              |
+| --------- | ------------------------------------------------------- |
+| Frontend  | React, Vite, Tailwind CSS, Socket.io client             |
+| Backend   | Node.js, Express, TypeScript, Socket.io                 |
+| Database  | SQLite (via Prisma ORM)                                 |
+| Container | Docker, Docker Compose, Nginx (frontend static serving) |
 
 ---
 
@@ -266,7 +236,7 @@ whatsapp-mocked/
 **Webhook not reaching my server**
 Make sure your webhook URL uses `host.docker.internal` instead of `localhost`. Check the Webhook Logs panel for the actual response received.
 
-**`host.docker.internal` does not resolve**
+`host.docker.internal` **does not resolve**
 This is handled automatically by the `extra_hosts` setting in `docker-compose.yml`. If you run the services outside Docker, use `localhost` directly.
 
 **Database reset**
