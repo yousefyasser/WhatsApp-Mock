@@ -80,6 +80,36 @@ function App() {
     }
   };
 
+  const handleSendMedia = async (file: File) => {
+    if (!activeChatId) return;
+    const activeChat = chats.find(c => c.id === activeChatId);
+    if (!activeChat) return;
+
+    try {
+      const { uploadMedia } = await import('./services/mediaApi');
+      const { id: mediaId } = await uploadMedia(file, activeChat.phoneNumberId);
+      
+      let type = 'document';
+      if (file.type.startsWith('image/')) type = file.type === 'image/webp' ? 'sticker' : 'image';
+      else if (file.type.startsWith('video/')) type = 'video';
+      else if (file.type.startsWith('audio/')) type = 'audio';
+
+      const payload = {
+        messaging_product: 'whatsapp',
+        to: activeChat.contact?.phoneNumber || activeChat.contactId,
+        type,
+        [type]: {
+          id: mediaId,
+          ...(type === 'document' ? { filename: file.name } : {})
+        }
+      };
+
+      await api.post(`/chats/${activeChatId}/messages/media`, payload);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDeleteChat = async (id: string) => {
     try {
       await api.delete(`/chats/${id}`);
@@ -117,6 +147,7 @@ function App() {
           messages={messages} 
           onSendMessage={handleSendMessage}
           onSendAudio={handleSendAudio}
+          onSendMedia={handleSendMedia}
           onUpdateChat={(updatedChat) => {
             setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, ...updatedChat } : c));
           }}

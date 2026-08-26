@@ -32,9 +32,10 @@ WhatsApp Mock Service eliminates that friction by:
 
 - **Per-chat configuration** — each chat has its own webhook URL, phone number ID, WABA ID, and verify token
 - **Webhook forwarding** — inbound messages are dispatched to your server in the official WhatsApp Cloud API payload format
-- **Text & voice messages** — send plain text or record and send voice notes directly from the UI
+- **Text & media messages** — send plain text, record voice notes, or upload media (images, documents, videos, stickers) directly from the UI
 - **Webhook logs** — inspect every outbound webhook call including the payload, response code, and body
 - **Chat tagging** — assign comma-separated tags to chats for easier triage across different test environments
+- **Media Support** — complete WhatsApp Cloud API mirror for uploading files, sending media messages, and two-step retrieval
 - **Docker-first** — one command to start everything
 
 ---
@@ -198,6 +199,7 @@ When you send a message from the UI, the service dispatches an HTTP `POST` to th
 
 Your application can simulate sending a WhatsApp message by calling the mock API exactly as it would call the real WhatsApp Cloud API:
 
+**Send Text Message**:
 ```bash
 POST /v22.0/<phone_number_id>/messages
 Content-Type: application/json
@@ -207,6 +209,29 @@ Content-Type: application/json
   "to": "<contact_phone>",
   "type": "text",
   "text": { "body": "Hello from your app!" }
+}
+```
+
+**Upload Media**:
+```bash
+POST /v22.0/<phone_number_id>/media
+Content-Type: multipart/form-data
+
+-F "messaging_product=whatsapp" \
+-F "type=image/jpeg" \
+-F "file=@/path/to/photo.jpg"
+```
+
+**Send Media Message**:
+```bash
+POST /v22.0/<phone_number_id>/messages
+Content-Type: application/json
+
+{
+  "messaging_product": "whatsapp",
+  "to": "<contact_phone>",
+  "type": "image",
+  "image": { "id": "<media_id>", "caption": "Look at this!" }
 }
 ```
 

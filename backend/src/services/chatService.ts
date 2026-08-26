@@ -1,7 +1,15 @@
 import prisma from '../db/client';
 import { getSocket } from '../ws/socketHandler';
 
-export const handleIncomingApiMessage = async (toPhone: string, textBody: string) => {
+export const handleIncomingApiMessage = async (
+  toPhone: string, 
+  textBody: string, 
+  type: string = 'text',
+  mediaId?: string,
+  mediaLink?: string,
+  mediaCaption?: string,
+  mediaFilename?: string
+) => {
   // Find or create contact
   let contact = await prisma.contact.findUnique({ where: { phoneNumber: toPhone } });
   if (!contact) {
@@ -14,6 +22,14 @@ export const handleIncomingApiMessage = async (toPhone: string, textBody: string
     chat = await prisma.chat.create({ data: { contactId: contact.id } });
   }
 
+  let mediaUrl: string | undefined = undefined;
+  if (mediaId) {
+    const media = await prisma.media.findUnique({ where: { id: mediaId } });
+    if (media) mediaUrl = media.storagePath;
+  } else if (mediaLink) {
+    mediaUrl = mediaLink;
+  }
+
   // Create message
   const wamid = `wamid.HBgL${Math.random().toString(36).substring(2, 15)}`;
   const message = await prisma.message.create({
@@ -24,9 +40,15 @@ export const handleIncomingApiMessage = async (toPhone: string, textBody: string
       senderPhone: contact.phoneNumber,
       recipientPhone: chat.phoneNumber,
       textBody,
+      type,
+      mediaId,
+      mediaLink,
+      mediaCaption,
+      mediaFilename,
+      mediaUrl,
       status: 'DELIVERED'
     },
-    include: { chat: { include: { contact: true } } }
+    include: { chat: { include: { contact: true } }, media: true }
   });
 
   // Update chat lastMessageAt and unread

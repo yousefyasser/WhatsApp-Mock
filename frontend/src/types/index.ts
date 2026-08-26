@@ -25,6 +25,18 @@ export interface Chat {
   messages?: Message[];
 }
 
+export interface Media {
+  id: string;
+  filename: string;
+  mimeType: string;
+  fileSize: number;
+  mediaType: string;
+  storagePath: string;
+  sha256: string;
+  uploadedAt: string;
+  expiresAt: string;
+}
+
 export interface Message {
   id: string;
   chatId: string;
@@ -36,8 +48,13 @@ export interface Message {
   type: string;
   mediaUrl?: string;
   status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
-  errorMessage: string | null;
+  errorMessage?: string;
   timestamp: string;
+  mediaId?: string;
+  media?: Media;
+  mediaLink?: string;
+  mediaCaption?: string;
+  mediaFilename?: string;
 }
 
 export interface WebhookLog {

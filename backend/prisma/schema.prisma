@@ -51,6 +51,11 @@ model Message {
   status         String   @default("SENT") // "SENT", "DELIVERED", "READ", "FAILED"
   errorMessage   String?
   timestamp      DateTime @default(now())
+  mediaId        String?
+  media          Media?   @relation(fields: [mediaId], references: [id])
+  mediaLink      String?
+  mediaCaption   String?
+  mediaFilename  String?
 }
 
 model WebhookLog {
@@ -62,4 +67,17 @@ model WebhookLog {
   responseBody String?
   success      Boolean  @default(false)
   createdAt    DateTime @default(now())
+}
+
+model Media {
+  id          String    @id @default(uuid())
+  filename    String
+  mimeType    String
+  fileSize    Int
+  mediaType   String    // "image" | "audio" | "video" | "document" | "sticker"
+  storagePath String
+  sha256      String    @default("")
+  uploadedAt  DateTime  @default(now())
+  expiresAt   DateTime
+  messages    Message[]
 }

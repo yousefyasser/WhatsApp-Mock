@@ -27,9 +27,16 @@ export const dispatchWebhook = async (message: any, contact: any) => {
             id: message.wamid,
             timestamp: Math.floor(message.timestamp.getTime() / 1000).toString(),
             type: message.type || "text",
-            ...(message.type === 'audio' 
-              ? { audio: { id: message.id, mime_type: 'audio/webm' } }
-              : { text: { body: message.textBody } })
+            ...(message.type === 'text' && { text: { body: message.textBody } }),
+            ...(message.type !== 'text' && {
+              [message.type]: {
+                ...(message.mediaLink ? { link: message.mediaLink } : { id: message.mediaId || message.id }),
+                ...(message.media?.mimeType && { mime_type: message.media.mimeType }),
+                ...(message.media?.sha256 && { sha256: message.media.sha256 }),
+                ...(message.mediaCaption && { caption: message.mediaCaption }),
+                ...(message.mediaFilename && { filename: message.mediaFilename })
+              }
+            })
           }]
         }
       }]

@@ -11,11 +11,12 @@ interface Props {
   messages: Message[];
   onSendMessage: (text: string) => void;
   onSendAudio?: (blob: Blob) => void;
+  onSendMedia?: (file: File) => void;
   onUpdateChat: (chat: Chat) => void;
   onDeleteChat: (chatId: string) => void;
 }
 
-export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onUpdateChat, onDeleteChat }) => {
+export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onSendMedia, onUpdateChat, onDeleteChat }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -84,7 +85,7 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
         {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
       </div>
 
-      <MessageInput onSend={onSendMessage} onSendAudio={onSendAudio} />
+      <MessageInput onSend={onSendMessage} onSendAudio={onSendAudio} onSendMedia={onSendMedia} />
     </div>
   );
 };
