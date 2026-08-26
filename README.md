@@ -73,6 +73,7 @@ cp .env.example .env
 ```env
 BACKEND_PORT=3000
 FRONTEND_PORT=5173
+PUBLIC_BASE_URL=http://host.docker.internal:3000
 ```
 
 Then restart Compose so the new mappings take effect:
@@ -82,13 +83,48 @@ docker compose up -d
 ```
 
 
-| Variable        | Maps to            | Default |
-| --------------- | ------------------ | ------- |
-| `BACKEND_PORT`  | host → API `:3000` | `3000`  |
-| `FRONTEND_PORT` | host → UI `:80`    | `5173`  |
+| Variable          | Purpose                                      | Default                          |
+| ----------------- | -------------------------------------------- | -------------------------------- |
+| `BACKEND_PORT`    | Host port mapped to the API container `:3000` | `3000`                           |
+| `FRONTEND_PORT`   | Host port mapped to the UI container `:80`    | `5173`                           |
+| `PUBLIC_BASE_URL` | Base URL for media download links (see below) | `http://localhost:3000` (in API) |
 
 
 If `.env` is missing, Compose uses the defaults above.
+
+### Public base URL (`PUBLIC_BASE_URL`)
+
+When your application follows the WhatsApp Cloud API two-step media flow — `GET /v22.0/{media_id}` to obtain a download URL, then fetch that URL — the mock prefixes the returned `url` with `PUBLIC_BASE_URL`:
+
+```json
+{
+  "url": "http://host.docker.internal:3000/v22.0/media/{media_id}/download",
+  "mime_type": "image/jpeg",
+  "sha256": "...",
+  "file_size": 12345,
+  "id": "{media_id}"
+}
+```
+
+**When to set it**
+
+- **Leave unset** (or use `http://localhost:3000`) if the client downloading media runs on your host machine and can reach the API via `localhost`.
+- **Set it** when the downloader runs in a different Docker container or network and cannot reach `localhost:3000` inside the mock container. Use a hostname that resolves from the downloader's environment, such as `host.docker.internal`.
+
+**How to set it**
+
+Add `PUBLIC_BASE_URL` to your `.env` file and restart Compose:
+
+```env
+PUBLIC_BASE_URL=http://host.docker.internal:3000
+```
+
+If you change `BACKEND_PORT`, update `PUBLIC_BASE_URL` to use the same host port:
+
+```env
+BACKEND_PORT=8080
+PUBLIC_BASE_URL=http://host.docker.internal:8080
+```
 
 ### Connecting to localhost from inside Docker
 
@@ -221,6 +257,14 @@ Content-Type: multipart/form-data
 -F "type=image/jpeg" \
 -F "file=@/path/to/photo.jpg"
 ```
+
+**Retrieve Media URL** (two-step download, mirrors WhatsApp Cloud API):
+
+```bash
+GET /v22.0/{media_id}
+```
+
+The response includes a `url` field pointing at the download endpoint. If your app runs in another Docker container, set `PUBLIC_BASE_URL` in `.env` so that URL is reachable from your app's network (see [Public base URL](#public-base-url-public_base_url)).
 
 **Send Media Message**:
 ```bash
