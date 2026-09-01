@@ -48,13 +48,9 @@ function App() {
   }, [activeChatId]);
 
   const handleNewChat = async (chatData: any) => {
-    try {
-      const res = await api.post('/chats', chatData);
-      fetchChats();
-      setActiveChatId(res.data.id);
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await api.post('/chats', chatData);
+    fetchChats();
+    setActiveChatId(res.data.id);
   };
 
   const handleSendMessage = async (text: string) => {

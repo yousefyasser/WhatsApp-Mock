@@ -26,7 +26,7 @@ model Chat {
   phoneNumberId      String    @default("100000000000001")
   wabaId             String    @default("200000000000002")
   webhookVerifyToken String    @default("mock_verify_token")
-  webhookUrl         String    @default("http://host.docker.internal:8000/api/whatsapp/webhook")
+  webhookUrl         String    @default("http://host.docker.internal:8000/webhook")
   accessToken        String    @default("mock_access_token_secret")
   tags               String    @default("") // Comma-separated list of tags
   backgroundColor    String    @default("") // e.g. "#ffffff"

@@ -144,7 +144,7 @@ extra_hosts:
 So if your application's webhook listens on port `8000`, set the Webhook URL in the chat settings to:
 
 ```
-http://host.docker.internal:8000/api/whatsapp/webhook
+http://host.docker.internal:8000/webhook
 ```
 
 ---
@@ -311,6 +311,15 @@ Make sure your webhook URL uses `host.docker.internal` instead of `localhost`. C
 
 `host.docker.internal` **does not resolve**
 This is handled automatically by the `extra_hosts` setting in `docker-compose.yml`. If you run the services outside Docker, use `localhost` directly.
+
+**"The table `main.Chat` does not exist"**
+SQLite is empty until Prisma creates the schema. Newer images run `prisma db push` on start. On an already-running container:
+
+```bash
+docker compose exec backend npx prisma db push
+```
+
+Then reload the UI.
 
 **Database reset**
 The SQLite file lives at `backend/prisma/dev.db`. To reset all data, stop the containers and delete that file, then restart.
