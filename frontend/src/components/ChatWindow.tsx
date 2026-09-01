@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Chat, Message } from '../types';
+import { Chat, LocationPayload, Message } from '../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatSettingsModal } from './ChatSettingsModal';
+import { LocationPickerModal } from './LocationPickerModal';
 import { Settings, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
@@ -12,13 +13,16 @@ interface Props {
   onSendMessage: (text: string) => void;
   onSendAudio?: (blob: Blob) => void;
   onSendMedia?: (file: File) => void;
+  onSendLocation?: (location: LocationPayload, contextWamid?: string) => void;
+  onShareContact?: (contextWamid?: string) => void;
   onUpdateChat: (chat: Chat) => void;
   onDeleteChat: (chatId: string) => void;
 }
 
-export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onSendMedia, onUpdateChat, onDeleteChat }) => {
+export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onSendMedia, onSendLocation, onShareContact, onUpdateChat, onDeleteChat }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [locationPicker, setLocationPicker] = useState<{ open: boolean; contextWamid?: string }>({ open: false });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -82,10 +86,28 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
       />
       
       <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
-        {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
+        {messages.map(msg => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            onRequestLocation={(wamid) => setLocationPicker({ open: true, contextWamid: wamid })}
+            onShareContact={(wamid) => onShareContact?.(wamid)}
+          />
+        ))}
       </div>
 
-      <MessageInput onSend={onSendMessage} onSendAudio={onSendAudio} onSendMedia={onSendMedia} />
+      <LocationPickerModal
+        isOpen={locationPicker.open}
+        onClose={() => setLocationPicker({ open: false })}
+        onSend={(location) => onSendLocation?.(location, locationPicker.contextWamid)}
+      />
+
+      <MessageInput
+        onSend={onSendMessage}
+        onSendAudio={onSendAudio}
+        onSendMedia={onSendMedia}
+        onShareLocation={onSendLocation ? () => setLocationPicker({ open: true }) : undefined}
+      />
     </div>
   );
 };

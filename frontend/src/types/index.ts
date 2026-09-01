@@ -37,6 +37,25 @@ export interface Media {
   expiresAt: string;
 }
 
+export interface LocationPayload {
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+export interface InteractivePayload {
+  type: 'location_request_message' | 'request_contact_info' | string;
+  body: { text: string };
+  action?: { name?: string };
+}
+
+export interface SharedContact {
+  origin?: 'contact_request' | 'other' | string;
+  name?: { formatted_name?: string; first_name?: string };
+  phones?: { phone: string; wa_id?: string; type?: string }[];
+}
+
 export interface Message {
   id: string;
   chatId: string;
@@ -55,6 +74,8 @@ export interface Message {
   mediaLink?: string;
   mediaCaption?: string;
   mediaFilename?: string;
+  payloadJson?: string | null;
+  contextWamid?: string | null;
 }
 
 export interface WebhookLog {

@@ -5,7 +5,7 @@ import { ChatWindow } from './components/ChatWindow';
 import { Activity } from 'lucide-react';
 import api from './services/api';
 import socket from './services/socket';
-import { Chat, Message } from './types';
+import { Chat, LocationPayload, Message } from './types';
 
 function App() {
   const [isLogsOpen, setIsLogsOpen] = useState(false);
@@ -106,6 +106,24 @@ function App() {
     }
   };
 
+  const handleSendLocation = async (location: LocationPayload, contextWamid?: string) => {
+    if (!activeChatId) return;
+    try {
+      await api.post(`/chats/${activeChatId}/messages/location`, { location, contextWamid });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleShareContact = async (contextWamid?: string) => {
+    if (!activeChatId) return;
+    try {
+      await api.post(`/chats/${activeChatId}/messages/contacts`, { contextWamid });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDeleteChat = async (id: string) => {
     try {
       await api.delete(`/chats/${id}`);
@@ -144,6 +162,8 @@ function App() {
           onSendMessage={handleSendMessage}
           onSendAudio={handleSendAudio}
           onSendMedia={handleSendMedia}
+          onSendLocation={handleSendLocation}
+          onShareContact={handleShareContact}
           onUpdateChat={(updatedChat) => {
             setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, ...updatedChat } : c));
           }}

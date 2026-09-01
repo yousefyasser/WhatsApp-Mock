@@ -56,6 +56,8 @@ model Message {
   mediaLink      String?
   mediaCaption   String?
   mediaFilename  String?
+  payloadJson    String?  // location / interactive / contacts payload
+  contextWamid   String?  // wamid of the message being replied to
 }
 
 model WebhookLog {

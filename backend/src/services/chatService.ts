@@ -1,6 +1,11 @@
 import prisma from '../db/client';
 import { getSocket } from '../ws/socketHandler';
 
+export type IncomingMessageExtras = {
+  payloadJson?: string;
+  contextWamid?: string;
+};
+
 export const handleIncomingApiMessage = async (
   toPhone: string, 
   textBody: string, 
@@ -8,7 +13,8 @@ export const handleIncomingApiMessage = async (
   mediaId?: string,
   mediaLink?: string,
   mediaCaption?: string,
-  mediaFilename?: string
+  mediaFilename?: string,
+  extras?: IncomingMessageExtras
 ) => {
   // Find or create contact
   let contact = await prisma.contact.findUnique({ where: { phoneNumber: toPhone } });
@@ -46,6 +52,8 @@ export const handleIncomingApiMessage = async (
       mediaCaption,
       mediaFilename,
       mediaUrl,
+      payloadJson: extras?.payloadJson,
+      contextWamid: extras?.contextWamid,
       status: 'DELIVERED'
     },
     include: { chat: { include: { contact: true } }, media: true }
