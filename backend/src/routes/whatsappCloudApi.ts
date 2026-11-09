@@ -140,12 +140,14 @@ router.post('/:phone_number_id/messages', async (req, res) => {
     const mediaTypes = ['image', 'document', 'audio', 'video', 'sticker'];
 
     if (body.type === 'text' && body.text?.body) {
-      const msg = await handleIncomingApiMessage(body.to, body.text.body, 'text');
-      return res.json({
-        messaging_product: "whatsapp",
-        contacts: [{ input: body.to, wa_id: body.to }],
-        messages: [{ id: msg.wamid }]
-      });
+      const recipient = body.to || body.recipient;
+      if (!recipient) {
+        return res.status(400).json({
+          error: { message: "to is required", type: "OAuthException", code: 100 }
+        });
+      }
+      const msg = await handleIncomingApiMessage(recipient, body.text.body, 'text');
+      return cloudApiSuccess(res, recipient, msg.wamid);
     } else if (mediaTypes.includes(body.type) && body[body.type]) {
       const mediaPayload = body[body.type];
       
@@ -169,24 +171,27 @@ router.post('/:phone_number_id/messages', async (req, res) => {
         });
       }
 
+      const recipient = body.to || body.recipient;
+      if (!recipient) {
+        return res.status(400).json({
+          error: { message: "to is required", type: "OAuthException", code: 100 }
+        });
+      }
+
       const caption = mediaPayload.caption;
       const filename = mediaPayload.filename;
 
       const msg = await handleIncomingApiMessage(
-        body.to, 
-        '', 
-        body.type, 
-        mediaIdStr, 
-        mediaLink, 
-        caption, 
+        recipient,
+        '',
+        body.type,
+        mediaIdStr,
+        mediaLink,
+        caption,
         filename
       );
 
-      return res.json({
-        messaging_product: "whatsapp",
-        contacts: [{ input: body.to, wa_id: body.to }],
-        messages: [{ id: msg.wamid }]
-      });
+      return cloudApiSuccess(res, recipient, msg.wamid);
     } else if (body.type === 'location' && body.location) {
       const recipient = body.to || body.recipient;
       if (!recipient) {

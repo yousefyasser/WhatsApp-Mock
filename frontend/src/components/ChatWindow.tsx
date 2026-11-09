@@ -4,8 +4,10 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ChatSettingsModal } from './ChatSettingsModal';
 import { LocationPickerModal } from './LocationPickerModal';
+import { FlowCompleteModal, FlowFormValues } from './FlowCompleteModal';
 import { Settings, Trash2 } from 'lucide-react';
 import api from '../services/api';
+import { getFlowSendFromMessage, getLastFlowSend } from '../utils/messagePayload';
 
 interface Props {
   chat: Chat | null;
@@ -15,14 +17,16 @@ interface Props {
   onSendMedia?: (file: File) => void;
   onSendLocation?: (location: LocationPayload, contextWamid?: string) => void;
   onShareContact?: (contextWamid?: string) => void;
+  onCompleteFlow?: (values: FlowFormValues, contextWamid?: string) => Promise<void> | void;
   onUpdateChat: (chat: Chat) => void;
   onDeleteChat: (chatId: string) => void;
 }
 
-export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onSendMedia, onSendLocation, onShareContact, onUpdateChat, onDeleteChat }) => {
+export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onSendAudio, onSendMedia, onSendLocation, onShareContact, onCompleteFlow, onUpdateChat, onDeleteChat }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [locationPicker, setLocationPicker] = useState<{ open: boolean; contextWamid?: string }>({ open: false });
+  const [flowModal, setFlowModal] = useState<{ open: boolean; contextWamid?: string }>({ open: false });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -92,6 +96,7 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
             message={msg}
             onRequestLocation={(wamid) => setLocationPicker({ open: true, contextWamid: wamid })}
             onShareContact={(wamid) => onShareContact?.(wamid)}
+            onCompleteFlow={(wamid) => setFlowModal({ open: true, contextWamid: wamid })}
           />
         ))}
       </div>
@@ -100,6 +105,20 @@ export const ChatWindow: React.FC<Props> = ({ chat, messages, onSendMessage, onS
         isOpen={locationPicker.open}
         onClose={() => setLocationPicker({ open: false })}
         onSend={(location) => onSendLocation?.(location, locationPicker.contextWamid)}
+      />
+
+      <FlowCompleteModal
+        isOpen={flowModal.open}
+        flowSend={(() => {
+          const fallback = getLastFlowSend(chat.lastFlowSendJson);
+          if (!flowModal.contextWamid) return fallback;
+          const origin = messages.find(m => m.wamid === flowModal.contextWamid);
+          return origin ? getFlowSendFromMessage(origin, fallback) : fallback;
+        })()}
+        onClose={() => setFlowModal({ open: false })}
+        onSubmit={async (values, contextWamid) => {
+          await onCompleteFlow?.(values, contextWamid);
+        }}
       />
 
       <MessageInput

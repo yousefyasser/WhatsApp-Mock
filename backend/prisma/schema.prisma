@@ -30,6 +30,7 @@ model Chat {
   accessToken        String    @default("mock_access_token_secret")
   tags               String    @default("") // Comma-separated list of tags
   backgroundColor    String    @default("") // e.g. "#ffffff"
+  lastFlowSendJson   String?   // { flow_id, flow_token, wamid } of last inbound Flow
   lastMessageAt      DateTime  @default(now())
   unreadCount        Int       @default(0)
   createdAt          DateTime  @default(now())

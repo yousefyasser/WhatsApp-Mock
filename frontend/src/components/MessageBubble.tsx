@@ -8,9 +8,10 @@ interface Props {
   message: Message;
   onRequestLocation?: (contextWamid: string) => void;
   onShareContact?: (contextWamid: string) => void;
+  onCompleteFlow?: (contextWamid: string) => void;
 }
 
-export const MessageBubble: React.FC<Props> = ({ message, onRequestLocation, onShareContact }) => {
+export const MessageBubble: React.FC<Props> = ({ message, onRequestLocation, onShareContact, onCompleteFlow }) => {
   const isOutbound = message.direction === 'OUTBOUND';
   const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const htmlContent = message.textBody ? parseWhatsAppMarkdown(message.textBody) : '';
@@ -51,25 +52,47 @@ export const MessageBubble: React.FC<Props> = ({ message, onRequestLocation, onS
 
   const renderInteractive = () => {
     const interactive = getInteractivePayload(message);
-    const body = interactive?.body?.text || message.textBody || 'Information request';
+    if (interactive?.type === 'nfm_reply') {
+      return (
+        <div className="min-w-[180px]">
+          <p className="text-xs text-gray-500 mb-1">Checkout details</p>
+          <p className="text-sm text-gray-800">{interactive.nfm_reply?.body || 'Sent'}</p>
+        </div>
+      );
+    }
+
+    const isFlow = interactive?.type === 'flow';
+    const body = interactive?.body?.text || (!isFlow ? (message.textBody || 'Information request') : '');
+    const header = interactive?.header?.text;
+    const footer = interactive?.footer?.text;
     const isLocationRequest = interactive?.type === 'location_request_message';
     const isContactRequest = interactive?.type === 'request_contact_info';
-    const canAct = !isOutbound && (isLocationRequest || isContactRequest);
+    const flowCta = interactive?.action?.parameters?.flow_cta || 'Complete details';
+    const canAct = !isOutbound && (isLocationRequest || isContactRequest || isFlow);
 
     return (
       <div className="min-w-[220px]">
-        <p className="text-sm text-gray-800 break-words whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: parseWhatsAppMarkdown(body) }} />
+        {isFlow && header && (
+          <p className="text-sm font-semibold text-gray-900 mb-1 break-words">{header}</p>
+        )}
+        {body ? (
+          <p className="text-sm text-gray-800 break-words whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: parseWhatsAppMarkdown(body) }} />
+        ) : null}
+        {isFlow && footer && (
+          <p className="text-xs text-gray-500 mt-1">{footer}</p>
+        )}
         {canAct && (
           <button
             type="button"
-            onClick={() => isLocationRequest
-              ? onRequestLocation?.(message.wamid)
-              : onShareContact?.(message.wamid)
-            }
+            onClick={() => {
+              if (isFlow) onCompleteFlow?.(message.wamid);
+              else if (isLocationRequest) onRequestLocation?.(message.wamid);
+              else onShareContact?.(message.wamid);
+            }}
             className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-md bg-[#00a884] text-white text-sm font-medium hover:bg-[#008f6f]"
           >
-            {isLocationRequest ? <MapPin size={16} /> : <Phone size={16} />}
-            {isLocationRequest ? 'Send location' : 'Share contact info'}
+            {isFlow ? null : isLocationRequest ? <MapPin size={16} /> : <Phone size={16} />}
+            {isFlow ? flowCta : isLocationRequest ? 'Send location' : 'Share contact info'}
           </button>
         )}
       </div>

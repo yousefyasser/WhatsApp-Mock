@@ -6,6 +6,7 @@ import { Activity } from 'lucide-react';
 import api from './services/api';
 import socket from './services/socket';
 import { Chat, LocationPayload, Message } from './types';
+import { FlowFormValues } from './components/FlowCompleteModal';
 
 function App() {
   const [isLogsOpen, setIsLogsOpen] = useState(false);
@@ -124,6 +125,11 @@ function App() {
     }
   };
 
+  const handleCompleteFlow = async (values: FlowFormValues, contextWamid?: string) => {
+    if (!activeChatId) return;
+    await api.post(`/chats/${activeChatId}/messages/nfm-reply`, { ...values, contextWamid });
+  };
+
   const handleDeleteChat = async (id: string) => {
     try {
       await api.delete(`/chats/${id}`);
@@ -164,6 +170,7 @@ function App() {
           onSendMedia={handleSendMedia}
           onSendLocation={handleSendLocation}
           onShareContact={handleShareContact}
+          onCompleteFlow={handleCompleteFlow}
           onUpdateChat={(updatedChat) => {
             setChats(prev => prev.map(c => c.id === updatedChat.id ? { ...c, ...updatedChat } : c));
           }}
